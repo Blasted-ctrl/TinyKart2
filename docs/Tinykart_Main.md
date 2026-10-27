@@ -14,7 +14,7 @@
     - Code to interface with the expansion board on the kart which actuates the motors and servos, as well as reports things like IMU data
 
  **Node Diagram:**
- ![Node graph](./NodeDiagram.png)
+ ![Node graph](./images/NodeDiagram.png)
  - Nodes are the ovals
  - Topics are the rectangles
  - Hexagons are hardware

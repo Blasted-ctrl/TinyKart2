@@ -14,6 +14,6 @@ The LD19 LiDAR will measure the distance to the nearest object in 360 degrees ar
 
 The `ranges[]` field in the **LaserScan** message is an array of float values for distance in meters. The value at index *n* will be the range at the angle *n* in degrees clockwise from straight in-front of the lidar.
 
-![Lidar diagram](./LiDAR_Diagram.png)
+![Lidar diagram](./images/LiDAR_Diagram.png)
 
-![Lidar diagram 2](./Lidar_diagram_2.png)
+![Lidar diagram 2](./images/Lidar_diagram_2.png)
