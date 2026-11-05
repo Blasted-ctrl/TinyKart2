@@ -1,5 +1,6 @@
 import rclpy
 import sys
+import time
 from rclpy.node import Node
 from .Rosmaster_Lib import Rosmaster
 
@@ -8,10 +9,17 @@ from tk2_msgs.msg import Kartdata
 
 bot = Rosmaster()
 
+#Sonion https://tinyurl.com/documentation23425
+
 class YahboomDriver(Node):
 
     def __init__(self):
         super().__init__('yahboom_driver')
+
+        # Defining Timeout Variables HARDWARE TEST PENDING (Change this once tested on fonem)
+        self.last_command_time = None
+        self.command_timeout = 1.0
+
         bot.create_receive_threading()
         self.publisher_ = self.create_publisher(Kartdata, '/kart_data', 10)
         self.subscription = self.create_subscription(
@@ -19,14 +27,27 @@ class YahboomDriver(Node):
             '/kart_cmd',
             self.listener_callback,
             10)
-        self.subscription        
+        self.subscription
+        self.watchdog_timer = self.create_timer(0.05, self.check_command_timeout)
+
+    def check_command_timeout(self):
+        if self.last_command_time is None:
+            bot.set_motor(0, 0, 0, 0)
+            return
+
+        elapsed = time.monotonic() - self.last_command_time
+
+        if elapsed >= self.command_timeout:
+            bot.set_motor(0, 0, 0, 0)
 
     def listener_callback(self, msg):
-        #grab commands from kart message
+        # Prevent EXPLOSIVE Crash by STOPPING THY CART
+        self.last_command_time = time.monotonic()
+
         cmd_throttle = msg.throttle
         cmd_steer = msg.steering_angle
         cmd_buzzer = msg.buzzer
-        
+
         #self.get_logger().info("Throttle: " + str(cmd_throttle) + "\tSteering: " + str(cmd_steer))
 
         #set outputs onto kart
@@ -44,7 +65,7 @@ class YahboomDriver(Node):
         kart_data.encoder = float(bot.get_motor_encoder()[1])
         self.publisher_.publish(kart_data)
 
-        
+
 
 def main(args=None):
     rclpy.init(args=args)
