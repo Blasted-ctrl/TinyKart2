@@ -7,6 +7,9 @@
 #include "rclcpp/logger.hpp"
 #include "tk2_msgs/msg/kartmsg.hpp"
 #include "tk2_msgs/msg/kartdata.hpp"
+// Math Libraries
+#include <cmath>
+#include <cstddef>
 
 namespace tk2_main{
 
