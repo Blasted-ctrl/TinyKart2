@@ -60,7 +60,7 @@ class YahboomDriver(Node):
 
         kart_data = Kartdata()
         kart_data.velocity.x = float(bot.get_motion_data()[0])
-        kart_data.velocity.y = float(bot.get_motion_data()[1a])
+        kart_data.velocity.y = float(bot.get_motion_data()[1])
         kart_data.velocity.z = float(bot.get_motion_data()[2])
         kart_data.encoder = float(bot.get_motor_encoder()[1])
         self.publisher_.publish(kart_data)
