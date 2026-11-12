@@ -29,7 +29,7 @@ void TK2_Main_Node::lidar_callback(sensor_msgs::msg::LaserScan::SharedPtr msg){
   */
 
   /* Math Variables */
-  constexpr double pi = M_PI;
+  constexpr double pi = 3.14159265358979323846; // Changed from M_PI
   constexpr double forward_half_angle = pi / 4.0;  // 45 degrees
   constexpr double stop_distance = 0.75;          // meters; Temporary rn. Needs proper testing
 
@@ -59,30 +59,54 @@ void TK2_Main_Node::lidar_callback(sensor_msgs::msg::LaserScan::SharedPtr msg){
   if (metadata_valid) {
       // Parse for Only the FRONT of TinyKart™
       for (std::size_t i = 0; i < msg->ranges.size(); ++i) {
-
+          // Which Direction does it Point to
           const double angle =
-              msg->angle_min + i * static_cast<double>(msg->angle_increment)
-          // Turn any degree from -180 < x to POSITIVE integers
+              msg->angle_min + i * static_cast<double>(msg->angle_increment);
+          // Turns to -180 < x < 180; Calculations in Radians
+          const double wrapped_angle =
+              std::atan2(std::sin(angle), std::cos(angle));
+          // Skip readings outside the forward 90-degree region.
           if (std::abs(wrapped_angle) > forward_half_angle) {
               continue;
           }
 
-          //
+          ++forward_readings;
+          const double distance = msg->ranges[i];
 
+          if (!std::isfinite(distance)
+          ||distance < msg->range_min
+          ||distance > msg->range_max) {
+              invalid_forward_reading = true;
+              continue;
+          }
+
+          if (distance <= stop_distance) {
+            obstacle_detected = true;
+          }
+        }
       }
+  // Act on the Readings!!
+  const bool stop_required =
+        !metadata_valid ||
+        forward_readings == 0 ||
+        invalid_forward_reading ||
+        obstacle_detected;
+
+    auto kartcmd = tk2_msgs::msg::Kartmsg();
+
+    // Keep the kart stationary during development.
+    kartcmd.throttle = 0;
+
+    if (stop_required) {
+      kartcmd.throttle = 0;
+
+      RCLCPP_WARN_THROTTLE(
+          this->get_logger(), *this->get_clock(), 2000,
+          "Stop required: obstacle ahead or insufficient valid scan data");
+    }
+
+    this->drive_pub_->publish(kartcmd);
   }
-
-  //  Create a blank message in the kartmessage format
-  auto kartcmd = tk2_msgs::msg::Kartmsg();
-  /*  The kartmsg format is defined in the tk2_msgs package, you can refernce it there
-      The two main fields in the kartmsg format are throttle (0 by default), and steering_angle (90 by default)
-      You can edit these fields for the 'kartcmd' variable we just made like so:
-      kartcmd.throttle = <throttle in % of total throttle>, kartcmd.steering_angle = <steering angle in degrees>
-  */
-
-  //Publishes the kartcmd message to the "/kart_cmd" topic
-  this->drive_pub_->publish(kartcmd);
-}
 
 void TK2_Main_Node::kart_callback(tk2_msgs::msg::Kartdata::SharedPtr msg){
   xvel = msg->velocity.x;
