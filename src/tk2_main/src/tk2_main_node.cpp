@@ -31,7 +31,7 @@ void TK2_Main_Node::lidar_callback(sensor_msgs::msg::LaserScan::SharedPtr msg){
   /* Math Variables */
   constexpr double pi = M_PI;
   constexpr double forward_half_angle = pi / 4.0;  // 45 degrees
-  constexpr double stop_distance = 0.75;          // meters; Temporary rn
+  constexpr double stop_distance = 0.75;          // meters; Temporary rn. Needs proper testing
 
   /* Defining Obstacle Detected Variables */
   bool obstacle_detected = false;
@@ -55,6 +55,22 @@ void TK2_Main_Node::lidar_callback(sensor_msgs::msg::LaserScan::SharedPtr msg){
     msg->angle_increment != 0.0f &&
     ((msg->angle_max > msg->angle_min && msg->angle_increment > 0.0f) ||
      (msg->angle_max < msg->angle_min && msg->angle_increment < 0.0f));
+
+  if (metadata_valid) {
+      // Parse for Only the FRONT of TinyKart™
+      for (std::size_t i = 0; i < msg->ranges.size(); ++i) {
+
+          const double angle =
+              msg->angle_min + i * static_cast<double>(msg->angle_increment)
+          // Turn any degree from -180 < x to POSITIVE integers
+          if (std::abs(wrapped_angle) > forward_half_angle) {
+              continue;
+          }
+
+          //
+
+      }
+  }
 
   //  Create a blank message in the kartmessage format
   auto kartcmd = tk2_msgs::msg::Kartmsg();
